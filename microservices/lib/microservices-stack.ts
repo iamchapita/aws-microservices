@@ -10,11 +10,15 @@ export class MicroservicesStack extends cdk.Stack {
 		super(scope, id, props);
 
 		const database = new SwnDatabase(this, "Database");
+
 		const microservices = new SwnMicroservices(this, "Microservices", {
 			productTable: database.productTable,
+			basketTable: database.basketTable,
 		});
+
 		const apiGateway = new SwnApiGateway(this, "ApiGateway", {
 			productMicroservice: microservices.productMicroservice,
+			basketMicroservice: microservices.basketMicroservice,
 		});
 	}
 }
