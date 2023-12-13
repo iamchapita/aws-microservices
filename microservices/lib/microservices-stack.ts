@@ -1,31 +1,32 @@
 import * as cdk from "aws-cdk-lib";
-import { LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
-import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
-import { Code, Runtime } from "aws-cdk-lib/aws-lambda";
-import {
-	NodejsFunction,
-	NodejsFunctionProps,
-} from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
-import { join } from "path";
+
 import { SwnDatabase } from "./database";
+import { SwnMicroservices } from "./microservice";
+import { SwnApiGateway } from "./apigateway";
 
 export class MicroservicesStack extends cdk.Stack {
 	constructor(scope: Construct, id: string, props?: cdk.StackProps) {
 		super(scope, id, props);
 
 		const database = new SwnDatabase(this, "Database");
-		// const productTable = new Table(this, "product", {
-		// 	partitionKey: {
-		// 		name: "id",
-		// 		type: AttributeType.STRING,
-		// 	},
-		// 	tableName: "product",
-		// 	removalPolicy: cdk.RemovalPolicy.DESTROY,
-		// 	billingMode: BillingMode.PAY_PER_REQUEST,
-		// });
+		const microservices = new SwnMicroservices(this, "Microservices", {
+			productTable: database.productTable,
+		});
+		const apiGateway = new SwnApiGateway(this, "ApiGateway", {
+			productMicroservice: microservices.productMicroservice,
+		});
+		/* const productTable = new Table(this, "product", {
+			partitionKey: {
+				name: "id",
+				type: AttributeType.STRING,
+			},
+			tableName: "product",
+			removalPolicy: cdk.RemovalPolicy.DESTROY,
+			billingMode: BillingMode.PAY_PER_REQUEST,
+		}); */
 
-		const nodejsFunctionProps: NodejsFunctionProps = {
+		/* const nodejsFunctionProps: NodejsFunctionProps = {
 			bundling: {
 				externalModules: ["aws-sdk"],
 			},
@@ -43,13 +44,13 @@ export class MicroservicesStack extends cdk.Stack {
 				entry: join(__dirname, "../src/product/index.js"),
 				...nodejsFunctionProps,
 			}
-		);
+		); 
+		
+		database.productTable.grantReadWriteData(productFunction);*/
 
-		database.productTable.grantReadWriteData(productFunction);
-
-		const apiGateway = new LambdaRestApi(this, "productAPI", {
+		/* const apiGateway = new LambdaRestApi(this, "productAPI", {
 			restApiName: "Product Service",
-			handler: productFunction,
+			handler: microservices.productMicroservice,
 			proxy: false,
 		});
 
@@ -60,6 +61,6 @@ export class MicroservicesStack extends cdk.Stack {
 		const singleProduct = product.addResource("{id}");
 		singleProduct.addMethod("GET");
 		singleProduct.addMethod("PUT");
-		singleProduct.addMethod("DELETE");
+		singleProduct.addMethod("DELETE"); */
 	}
 }
