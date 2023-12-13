@@ -8,20 +8,22 @@ import {
 } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
 import { join } from "path";
+import { SwnDatabase } from "./database";
 
 export class MicroservicesStack extends cdk.Stack {
 	constructor(scope: Construct, id: string, props?: cdk.StackProps) {
 		super(scope, id, props);
 
-		const productTable = new Table(this, "product", {
-			partitionKey: {
-				name: "id",
-				type: AttributeType.STRING,
-			},
-			tableName: "product",
-			removalPolicy: cdk.RemovalPolicy.DESTROY,
-			billingMode: BillingMode.PAY_PER_REQUEST,
-		});
+		const database = new SwnDatabase(this, "Database");
+		// const productTable = new Table(this, "product", {
+		// 	partitionKey: {
+		// 		name: "id",
+		// 		type: AttributeType.STRING,
+		// 	},
+		// 	tableName: "product",
+		// 	removalPolicy: cdk.RemovalPolicy.DESTROY,
+		// 	billingMode: BillingMode.PAY_PER_REQUEST,
+		// });
 
 		const nodejsFunctionProps: NodejsFunctionProps = {
 			bundling: {
@@ -29,7 +31,7 @@ export class MicroservicesStack extends cdk.Stack {
 			},
 			environment: {
 				PRIMARY_KEY: "id",
-				DYNAMODB_TABLE_NAME: productTable.tableName,
+				DYNAMODB_TABLE_NAME: database.productTable.tableName,
 			},
 			runtime: Runtime.NODEJS_20_X,
 		};
@@ -43,7 +45,7 @@ export class MicroservicesStack extends cdk.Stack {
 			}
 		);
 
-		productTable.grantReadWriteData(productFunction);
+		database.productTable.grantReadWriteData(productFunction);
 
 		const apiGateway = new LambdaRestApi(this, "productAPI", {
 			restApiName: "Product Service",
