@@ -9,15 +9,23 @@ import { ddbClient } from "./ddbClient";
 exports.handler = async function (event) {
 	console.log("request:", JSON.stringify(event, undefined, 2));
 
-	// TODO - Catch and Process Async EventBridge Invocation and Sync API Gateway Invocation
-	const eventType = event["detail-type"];
-	if (eventType !== undefined) {
-		// EventBridge Invocation
+	if (event.Records != null) {
+		await sqsInvocation(event);
+	} else if (event["detail-type"] !== undefined) {
 		await eventBridgeInvocation(event);
 	} else {
-		// API Gateway Invocation -- return sync response
 		return await apiGatewayInvocation(event);
 	}
+};
+
+const sqsInvocation = async (event) => {
+	console.log(`sqsInvocation function.event: ${event}`);
+
+	event.Records.forEach(async (record) => {
+		console.log("Record: %j", record);
+		const checkoutEventRequest = JSON.parse(record.body);
+		await createOrder(checkoutEventRequest);
+	});
 };
 
 const eventBridgeInvocation = async (event) => {
