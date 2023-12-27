@@ -1,3 +1,4 @@
+import { Duration } from "aws-cdk-lib";
 import { IFunction } from "aws-cdk-lib/aws-lambda";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { IQueue, Queue } from "aws-cdk-lib/aws-sqs";
